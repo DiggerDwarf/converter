@@ -27,7 +27,7 @@ image_data bmp::read(std::string filename)
 
     std::fread(&fileSize, 4, 1, file);
     std::fread(&(reserved[0]), 4, 1, file);
-    puts(reserved);
+    
     if (equals(reserved, "dWRF") && verbose) puts("Looks like this file was already made by me...");
     std::fread(&pixelArrayStart, 4, 1, file);
     std::fread(&dibHeaderSize, 4, 1, file);
@@ -89,7 +89,7 @@ image_data bmp::read(std::string filename)
     return image;
 }
 
-void bmp::write(std::string filename, image_data& data)
+void bmp::write(std::string filename, image_data* data)
 {
     if (std::filesystem::exists(filename.c_str()))
     {
@@ -106,7 +106,7 @@ void bmp::write(std::string filename, image_data& data)
 
     // We'll use BITMAPINFOHEADER for the dib header and BI_RGB for the compression
 
-    uint fileSize = 0x36 + data.height*data.width*3,
+    uint fileSize = 0x36 + data->height*data->width*3,
         pixelArrayStart = 0x36,
         dibHeaderSize = 0x28,
         compressionType = 0,
@@ -117,21 +117,23 @@ void bmp::write(std::string filename, image_data& data)
         bitsPerPixel = 24;
     int horizontalRes = 0,
         verticalRes = 0,
-        padding = (data.width*3) % 4;
+        padding = (data->width*3) % 4;
     const char* signature = "BM";
+
     char padder[padding];
+    memset(&padder, 0, padding);
 
     const char reserved[5] = "dWRF";
 
-    memset(&padder, 0, padding);
+    if (verbose) puts("Writing header . . .");
 
     std::fwrite(signature, 1, 2, file);
     std::fwrite(&fileSize, 4, 1, file);
     std::fwrite(&reserved, 1, 4, file);
     std::fwrite(&pixelArrayStart, 4, 1, file);
     std::fwrite(&dibHeaderSize, 4, 1, file);
-    std::fwrite(&data.width, 4, 1, file);
-    std::fwrite(&data.height, 4, 1, file);
+    std::fwrite(&data->width, 4, 1, file);
+    std::fwrite(&data->height, 4, 1, file);
     std::fwrite(&nbColorPlanes, 2, 1, file);
     std::fwrite(&bitsPerPixel, 2, 1, file);
     std::fwrite(&compressionType, 4, 1, file);
@@ -141,12 +143,15 @@ void bmp::write(std::string filename, image_data& data)
     std::fwrite(&colorsInPalette, 4, 1, file);
     std::fwrite(&nbImportantColors, 4, 1, file);
 
+    if (verbose) puts("Writing data . . .");
 
-    for (int i = 0; i < data.height; i++)
+    for (int i = 0; i < data->height; i++)
     {
-        fwrite(data.pixels[i], 3, data.width, file);
+        fwrite(data->pixels[i], 3, data->width, file);
         fwrite(padder, 1, padding, file);
     }
+
+    if (verbose) puts("Finished writing file !");
 
     std::fclose(file);
 }

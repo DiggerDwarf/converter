@@ -6,7 +6,7 @@
 namespace bmp
 {
     image_data read(std::string filename);
-    void write(std::string filename, image_data& data);
+    void write(std::string filename, image_data* data);
 } // namespace bmp
 
 #endif

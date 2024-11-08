@@ -38,20 +38,28 @@ int main(int argc, char const *argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        if (equals(argv[i], "--verbose") || equals(argv[i], "-v")) {
+        if (equals(argv[i], "--help") || equals(argv[i], "-h")) {
+            puts("Command line file format converter");
+            puts("Options:");
+            puts("  -h, --help                  Display this message and exit");
+            puts("  -f [path], --file [path]    Source file to be converted");
+            puts("  -v, --verbose               Describe the steps taken to convert the file");
+            std::exit(0);
+        }
+        else if (equals(argv[i], "--verbose") || equals(argv[i], "-v")) {
             verbose = true;
         }
-        else if (equals(argv[i], "--file")) {
+        else if (equals(argv[i], "--file") || equals(argv[i], "-f")) {
             if (i < argc - 1) {
                 sourceFile = argv[++i];
                 if (not std::filesystem::exists(sourceFile.c_str())) {
                     printf("Target file %s not found\n", sourceFile.c_str());
-                    exit(3);
+                    std::exit(3);
                 }
             }
             else {
                 puts("Expected argument after --file flag\n");
-                exit(3);
+                std::exit(3);
             }
         }
     }
@@ -59,14 +67,12 @@ int main(int argc, char const *argv[])
     if (sourceFile.empty())
     {
         puts("No input file was given, terminating.\n");
-        exit(0);
+        std::exit(0);
     }
 
     image_data a = bmp::read(sourceFile.c_str());
 
-    std::cout << (int)a.pixels[0][0].r << (int)a.pixels[0][0].g << (int)a.pixels[0][0].b << std::endl;
-
-    bmp::write(sourceFile+".test.bmp", a);
+    bmp::write(sourceFile+".test.bmp", &a);
 
     return 0;
 }
