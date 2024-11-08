@@ -4,7 +4,7 @@ Command-line utility for converting files to different formats
 Supported formats :
 | Category | Name | Status |
 | -------- | ---- | ------ |
-| Image    | BMP  | WIP    |
+| Image    | BMP  | Convert to 100%, convert from 90% |
 | Image    | PNG  | WIP    |
 
 Error codes :
