@@ -18,7 +18,7 @@ image_data bmp::read(std::string filename)
 
     #pragma region Header variables
 
-    if (verbose) puts("Reading header . . .");
+    if (verbose) std::puts("Reading header . . .");
 
     uint fileSize, pixelArrayStart, dibHeaderSize, compressionType, pixelArraySize, colorsInPalette, nbImportantColors;
     char reserved[5] = {};
@@ -28,7 +28,7 @@ image_data bmp::read(std::string filename)
     std::fread(&fileSize, 4, 1, file);
     std::fread(&(reserved[0]), 4, 1, file);
     
-    if (equals(reserved, "dWRF") && verbose) puts("Looks like this file was already made by me...");
+    if (equals(reserved, "dWRF") && verbose) std::puts("Looks like this file was already made by me...");
     std::fread(&pixelArrayStart, 4, 1, file);
     std::fread(&dibHeaderSize, 4, 1, file);
     if (dibHeaderSize != 40) { // Check header type is BITMAPINFOHEADER
@@ -64,7 +64,7 @@ image_data bmp::read(std::string filename)
 
     #pragma region Image data
 
-    if (verbose) puts("Reading data . . .");
+    if (verbose) std::puts("Reading data . . .");
 
     // Align to start of the pixel array
     std::fseek(file, pixelArrayStart - (14 + 40), SEEK_CUR);
@@ -84,7 +84,7 @@ image_data bmp::read(std::string filename)
 
     std::fclose(file);
 
-    if (verbose) puts("Finished reading file !");
+    if (verbose) std::puts("Finished reading file !");
 
     return image;
 }
@@ -125,7 +125,7 @@ void bmp::write(std::string filename, image_data* data)
 
     const char reserved[5] = "dWRF";
 
-    if (verbose) puts("Writing header . . .");
+    if (verbose) std::puts("Writing header . . .");
 
     std::fwrite(signature, 1, 2, file);
     std::fwrite(&fileSize, 4, 1, file);
@@ -143,7 +143,7 @@ void bmp::write(std::string filename, image_data* data)
     std::fwrite(&colorsInPalette, 4, 1, file);
     std::fwrite(&nbImportantColors, 4, 1, file);
 
-    if (verbose) puts("Writing data . . .");
+    if (verbose) std::puts("Writing data . . .");
 
     for (int i = 0; i < data->height; i++)
     {
@@ -151,7 +151,7 @@ void bmp::write(std::string filename, image_data* data)
         fwrite(padder, 1, padding, file);
     }
 
-    if (verbose) puts("Finished writing file !");
+    if (verbose) std::puts("Finished writing file !");
 
     std::fclose(file);
 }
