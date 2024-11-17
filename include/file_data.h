@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <cmath>
 
-typedef unsigned char BYTE;
 
 bool equals(const char* str1, const char* str2);
 void trim(std::string& str);
@@ -83,15 +82,20 @@ typedef enum {
 } file_type;
 
 typedef struct __pixel {
-    BYTE r;
-    BYTE g;
-    BYTE b;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
 } pixel;
+
+bool operator==(pixel p1, pixel p2);
+
+std::ostream& operator<<(std::ostream& stream, pixel pix);
 
 typedef struct __image_data {
     int height;
     int width;
-    pixel **pixels;
+    pixel *pixels;
 
     __image_data()
     {
@@ -100,18 +104,15 @@ typedef struct __image_data {
         this->pixels = nullptr;
     }
 
-    __image_data(int height, int width, pixel **pixels)
+    __image_data(int height, int width, pixel *pixels)
     {
         this->height = height;
         this->width = width;
         this->pixels = pixels;
     }
 
-    ~__image_data() {
-        for (int i = 0; i < this->height; i++)
-        {
-            delete this->pixels[i];
-        }
+    ~__image_data()
+    {
         delete this->pixels;
     }
 

@@ -1,6 +1,5 @@
 #include "BMP.h"
 
-typedef unsigned int uint;
 
 image_data bmp::read(std::string filename)
 {
@@ -20,7 +19,7 @@ image_data bmp::read(std::string filename)
 
     if (verbose) std::puts("Reading header . . .");
 
-    uint fileSize, pixelArrayStart, dibHeaderSize, compressionType, pixelArraySize, colorsInPalette, nbImportantColors;
+    uint32_t fileSize, pixelArrayStart, dibHeaderSize, compressionType, pixelArraySize, colorsInPalette, nbImportantColors;
     char reserved[5] = {};
     short nbColorPlanes, bitsPerPixel;
     int horizontalRes, verticalRes, padding;
@@ -69,14 +68,19 @@ image_data bmp::read(std::string filename)
     // Align to start of the pixel array
     std::fseek(file, pixelArrayStart - (14 + 40), SEEK_CUR);
     
-    image.pixels = new pixel*[image.height];
+    image.pixels = new pixel[image.height * image.width];
 
 
-    for (int i = 0; i < image.height; i++)
+    for (int i = image.height-1; i > -1; i--)
     {
-        image.pixels[i] = new pixel[image.width];
-
-        std::fread(image.pixels[i], 3, image.width, file);
+        for (int j = 0; j < image.width; j++)
+        {
+            std::fread(&(image.pixels[(i*image.width) + j]), 1, 3, file);
+            image.pixels[(i*image.width) + j] = pixel{image.pixels[(i*image.width) + j].b,
+                                                    image.pixels[(i*image.width) + j].g,
+                                                    image.pixels[(i*image.width) + j].r,
+                                                    255};
+        }
         std::fseek(file, padding, SEEK_CUR);
     }
 
@@ -106,7 +110,7 @@ void bmp::write(std::string filename, image_data* data)
 
     // We'll use BITMAPINFOHEADER for the dib header and BI_RGB for the compression
 
-    uint fileSize = 0x36 + data->height*data->width*3,
+    uint32_t fileSize = 0x36 + data->height*data->width*3,
         pixelArrayStart = 0x36,
         dibHeaderSize = 0x28,
         compressionType = 0,
@@ -145,9 +149,16 @@ void bmp::write(std::string filename, image_data* data)
 
     if (verbose) std::puts("Writing data . . .");
 
-    for (int i = 0; i < data->height; i++)
+    for (int i = data->height-1; i > -1; i--)
     {
-        fwrite(data->pixels[i], 3, data->width, file);
+        for (int j = 0; j < data->width; j++)
+        {
+            data->pixels[(i*data->width) + j] = pixel{data->pixels[(i*data->width) + j].b,
+                                                    data->pixels[(i*data->width) + j].g,
+                                                    data->pixels[(i*data->width) + j].r,
+                                                    255};
+            fwrite(&(data->pixels[(i*data->width) + j]), 1, 3, file);
+        }
         fwrite(padder, 1, padding, file);
     }
 

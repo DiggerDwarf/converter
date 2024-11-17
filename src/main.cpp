@@ -4,6 +4,17 @@
 #include "file_data.h"
 #include "BMP.h"
 #include "PNG.h"
+#include "QOI.h"
+
+bool operator==(pixel p1, pixel p2)
+{
+    return p1.r == p2.r && p1.g == p2.g && p1.b == p2.b && p1.a == p2.a; 
+}
+
+std::ostream& operator<<(std::ostream& stream, pixel pix)
+{
+    return stream << '<' << pix.r << ' ' << pix.g << ' ' << pix.b << '>';
+}
 
 bool equals(const char* str1, const char* str2)
 {
@@ -24,22 +35,22 @@ void trim(std::string &str)
     str = str.substr(start, end - start + 1);
 }
 
+// Map extension names to data type
 std::map<std::string, file_type> EXTENSION_TO_TYPE = {
     {"bmp", file_type::IMAGE},
-    {"png", file_type::IMAGE}
+    {"png", file_type::IMAGE},
+    {"qoi", file_type::IMAGE}
 };
 
-std::map<std::string, int> EXT_ID = {
-    {"bmp", 0},
-    {"png", 1}
-};
-
+// Handle calling the right function to read image data
 image_data read_image(std::string path, std::string ext)
 {
     if (ext == "bmp") {
         return bmp::read(path);
     } else if (ext == "png") {
         return png::read(path);
+    } else if (ext == "qoi") {
+        return qoi::read(path);
     }
     else {
         std::puts("Unknown extension (you're not supposed to be able to output that but ok i guess)");
@@ -47,12 +58,15 @@ image_data read_image(std::string path, std::string ext)
     }
 }
 
+// Handle calling the right function to write image data
 void write_image(std::string path, std::string ext, image_data* image)
 {
     if (ext == "bmp") {
         bmp::write(path, image);
     } else if (ext == "png") {
         png::write(path, image);
+    } else if (ext == "qoi") {
+        qoi::write(path, image);
     }
     else {
         std::puts("Unknown extension (you're not supposed to be able to output that but ok i guess)");
@@ -60,6 +74,7 @@ void write_image(std::string path, std::string ext, image_data* image)
     }
 }
 
+// Declare global variable verbose to be reused by everyone
 bool verbose = false;
 
 int main(int argc, char const *argv[])
@@ -69,7 +84,7 @@ int main(int argc, char const *argv[])
 
     for (int i = 1; i < argc; i++)      // Read arguments passed to the program
     {
-        if (equals(argv[i], "--help") || equals(argv[i], "-h")) {
+        if (equals(argv[i], "--help") || equals(argv[i], "-h")) {   // If help flag is found, display help and quit
             std::puts("Command line file format converter");
             std::puts("Options:");
             std::puts("  -h, --help                  Display this message and exit");
@@ -78,10 +93,10 @@ int main(int argc, char const *argv[])
             std::puts("  -v, --verbose               Describe the steps taken to convert the file");
             std::exit(0);
         }
-        else if (equals(argv[i], "--verbose") || equals(argv[i], "-v")) {
+        else if (equals(argv[i], "--verbose") || equals(argv[i], "-v")) {   // If verbose flag is found, enable verbose
             verbose = true;
         }
-        else if (equals(argv[i], "--file") || equals(argv[i], "-f")) {
+        else if (equals(argv[i], "--file") || equals(argv[i], "-f")) {      // if file flag is found, set source file path
             if (i < argc - 1) {
                 sourceFile = argv[++i];
                 if (not std::filesystem::exists(sourceFile.c_str())) {
@@ -94,7 +109,7 @@ int main(int argc, char const *argv[])
                 std::exit(3);
             }
         }
-        else if (equals(argv[i], "--output") || equals(argv[i], "-o")) {
+        else if (equals(argv[i], "--output") || equals(argv[i], "-o")) {    // if output flag is found, set output file path
             if (i < argc - 1) {
                 outputFile = argv[++i];
             }
@@ -104,6 +119,8 @@ int main(int argc, char const *argv[])
             }
         }
     }
+
+    #pragma region Parse I/O names
 
     if (sourceFile.empty()) {           // Check for target existence
         std::puts("No input file was given, terminating.");
@@ -135,20 +152,22 @@ int main(int argc, char const *argv[])
 
     // Check if these formats are implemented yet
     if (EXTENSION_TO_TYPE.count(sourceExt) == 0) {
-        std::puts("Source extension not implemented yet");
+        std::printf("Source extension \"%s\" not implemented yet\n", sourceExt.c_str());
         std::exit(3);
     } else if (EXTENSION_TO_TYPE.count(outputExt) == 0) {
-        std::puts("Output extension not implemented yet");
+        std::printf("Output extension \"%s\" not implemented yet\n", outputExt.c_str());
         std::exit(3);
     }
 
     // Check if those formats are compatible
     if (EXTENSION_TO_TYPE.at(sourceExt) != EXTENSION_TO_TYPE.at(outputExt)) {
-        std::puts("Input and output format are incompatible.");
+        std::printf("Input and output formats (\"%s\", \"%s\") are incompatible.\n", sourceExt.c_str(), outputExt.c_str());
         std::exit(3);
     }
 
-    switch (EXTENSION_TO_TYPE[sourceExt])
+    #pragma endregion
+
+    switch (EXTENSION_TO_TYPE.at(sourceExt))    // Switch over data types
     {
         case file_type::IMAGE: {
             image_data image = read_image(sourceFile, sourceExt);
