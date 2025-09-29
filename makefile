@@ -7,9 +7,9 @@ DBG 		=
 
 INCLUDE 	= -I ./include
 LIB			= 
-EXTRA		= -Wall -Werror -O3
+EXTRA		= -Wall -Werror
 STATIC  	= -static
-FIX			= -Wl,-V
+FIX			= 
 
 
 all: link
@@ -23,7 +23,7 @@ run!:
 	$(EXE) --verbose
 
 clean:
-	rm $(OBJ)
+	rm -f $(OBJ)
 
 build/%.o: src/%.cpp
 	g++ $(INCLUDE) -c src/$*.cpp -o build/$*.o $(DBG) $(EXTRA)
@@ -33,4 +33,5 @@ link: $(OBJ)
 
 test:
 	g++ test.cpp -o test $(LIB) $(STATIC) $(DBG) $(EXTRA) $(FIX)
+	./test
 

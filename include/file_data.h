@@ -6,12 +6,11 @@
 #include <iostream>
 #include <filesystem>
 #include <cmath>
-
+#include <stdint.h>
 
 bool equals(const char* str1, const char* str2);
 void trim(std::string& str);
 
-extern bool verbose;
 
 struct File     // File convenice
 {
@@ -78,14 +77,15 @@ public:
 };
 
 typedef enum {
-    IMAGE
+    IMAGE,
+    AUDIO
 } file_type;
 
 typedef struct __pixel {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
+    std::uint8_t r;
+    std::uint8_t g;
+    std::uint8_t b;
+    std::uint8_t a;
 } pixel;
 
 bool operator==(pixel p1, pixel p2);
@@ -93,9 +93,9 @@ bool operator==(pixel p1, pixel p2);
 std::ostream& operator<<(std::ostream& stream, pixel pix);
 
 typedef struct __image_data {
+    pixel *pixels;
     int height;
     int width;
-    pixel *pixels;
 
     __image_data()
     {
@@ -104,18 +104,57 @@ typedef struct __image_data {
         this->pixels = nullptr;
     }
 
-    __image_data(int height, int width, pixel *pixels)
+    __image_data(int height, int width)
     {
         this->height = height;
         this->width = width;
-        this->pixels = pixels;
+        this->pixels = new pixel[height * width];
     }
 
     ~__image_data()
     {
-        delete this->pixels;
+        delete[] this->pixels;
     }
 
 } image_data;
+
+typedef struct __audio_data {
+    // 8 Byte data
+    union {
+        std::uint8_t** uint8_samples;
+        std::int16_t** int16_samples;
+        std::int32_t** int32_samples;
+        float** float32_samples;
+    };
+
+    // 4 Byte data
+    std::uint32_t numSamples;
+    std::uint32_t sampleRate;
+    std::uint32_t bytesPerSample;
+
+    // 2 Byte data
+    std::uint16_t numChannels;
+
+    ~__audio_data() {
+        switch (this->bytesPerSample)
+        {
+        case 1:
+            delete this->uint8_samples;
+            break;
+        case 2:
+            delete this->int16_samples;
+            break;
+        case 3:
+            delete this->int32_samples;
+            break;
+        case 4:
+            delete this->float32_samples;
+            break;
+        
+        default:
+            break;
+        }
+    }
+} audio_data;
 
 #endif

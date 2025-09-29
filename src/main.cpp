@@ -3,8 +3,9 @@
 
 #include "file_data.h"
 #include "BMP.h"
-#include "PNG.h"
+#include <PNG.hpp>
 #include "QOI.h"
+#include "WAV.h"
 
 bool operator==(pixel p1, pixel p2)
 {
@@ -39,7 +40,8 @@ void trim(std::string &str)
 std::map<std::string, file_type> EXTENSION_TO_TYPE = {
     {"bmp", file_type::IMAGE},
     {"png", file_type::IMAGE},
-    {"qoi", file_type::IMAGE}
+    {"qoi", file_type::IMAGE},
+    {"wav", file_type::AUDIO}
 };
 
 // Handle calling the right function to read image data
@@ -74,6 +76,30 @@ void write_image(std::string path, std::string ext, image_data* image)
     }
 }
 
+// Handle calling the right function to read audio data
+audio_data read_audio(std::string path, std::string ext)
+{
+    if (ext == "wav") {
+        return wav::read(path);
+    }
+    else {
+        std::puts("Unknown extension (you're not supposed to be able to output that but ok i guess)");
+        std::exit(42);
+    }
+}
+
+// Handle calling the right function to write audio data
+void write_audio(std::string path, std::string ext, audio_data* audio)
+{
+    if (ext == "wav") {
+        wav::write(path, audio);
+    }
+    else {
+        std::puts("Unknown extension (you're not supposed to be able to output that but ok i guess)");
+        std::exit(42);
+    }
+}
+
 // Declare global variable verbose to be reused by everyone
 bool verbose = false;
 
@@ -100,7 +126,7 @@ int main(int argc, char const *argv[])
             if (i < argc - 1) {
                 sourceFile = argv[++i];
                 if (not std::filesystem::exists(sourceFile.c_str())) {
-                    printf("Target file %s not found\n", sourceFile.c_str());
+                    std::printf("Target file %s not found\n", sourceFile.c_str());
                     std::exit(3);
                 }
             }
@@ -133,6 +159,17 @@ int main(int argc, char const *argv[])
         }
         else {
             outputFile = sourceFile.substr(0, pos+1) + "new_" + sourceFile.substr(pos+1);
+        }
+    }
+
+    if (std::filesystem::exists(outputFile.c_str()))
+    {
+        std::cout << "The file \"" << outputFile << "\" already exists. Do you want to overwrite it ? [ y / .. ] ";
+        std::string input; std::getline(std::cin, input); trim(input);
+        if (input != "y" && input != "Y")
+        {
+            std::puts("User cancel; aborting operation");
+            return 0;
         }
     }
 
@@ -172,6 +209,11 @@ int main(int argc, char const *argv[])
         case file_type::IMAGE: {
             image_data image = read_image(sourceFile, sourceExt);
             write_image(outputFile, outputExt, &image);
+            break;
+        }
+        case file_type::AUDIO: {
+            audio_data audio = read_audio(sourceFile, sourceExt);
+            write_audio(outputFile, outputExt, &audio);
             break;
         }
         default:

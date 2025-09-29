@@ -17,7 +17,7 @@ image_data qoi::read(std::string filename)
 
     char signature[5] = {};
     std::fread(&signature, 1, 4, file);
-    if (not equals(signature, "qoif")) { // Check BM signature
+    if (not equals(signature, "qoif")) { // Check qoif signature
         if (verbose) std::printf("Invalid file signature ( %s ) vs expected for qoi files ( qoif )\n", signature);
         std::fclose(file);
         std::exit(1);

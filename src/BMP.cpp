@@ -19,7 +19,7 @@ image_data bmp::read(std::string filename)
 
     if (verbose) std::puts("Reading header . . .");
 
-    uint32_t fileSize, pixelArrayStart, dibHeaderSize, compressionType, pixelArraySize, colorsInPalette, nbImportantColors;
+    std::uint32_t fileSize, pixelArrayStart, dibHeaderSize, compressionType, pixelArraySize, colorsInPalette, nbImportantColors;
     char reserved[5] = {};
     short nbColorPlanes, bitsPerPixel;
     int horizontalRes, verticalRes, padding;
@@ -106,11 +106,11 @@ void bmp::write(std::string filename, image_data* data)
         }
     }
 
-    FILE* file = fopen(filename.c_str(), "wb");
+    FILE* file = std::fopen(filename.c_str(), "wb");
 
     // We'll use BITMAPINFOHEADER for the dib header and BI_RGB for the compression
 
-    uint32_t fileSize = 0x36 + data->height*data->width*3,
+    std::uint32_t fileSize = 0x36 + data->height*data->width*3,
         pixelArrayStart = 0x36,
         dibHeaderSize = 0x28,
         compressionType = 0,
@@ -125,7 +125,7 @@ void bmp::write(std::string filename, image_data* data)
     const char* signature = "BM";
 
     char padder[padding];
-    memset(&padder, 0, padding);
+    std::memset(&padder, 0, padding);
 
     const char reserved[5] = "dWRF";
 
@@ -157,9 +157,9 @@ void bmp::write(std::string filename, image_data* data)
                                                     data->pixels[(i*data->width) + j].g,
                                                     data->pixels[(i*data->width) + j].r,
                                                     255};
-            fwrite(&(data->pixels[(i*data->width) + j]), 1, 3, file);
+            std::fwrite(&(data->pixels[(i*data->width) + j]), 1, 3, file);
         }
-        fwrite(padder, 1, padding, file);
+        std::fwrite(padder, 1, padding, file);
     }
 
     if (verbose) std::puts("Finished writing file !");
